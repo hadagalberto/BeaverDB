@@ -76,7 +76,7 @@ if [ -d "beaverdb" ]; then
 fi
 
 # Aqui você deve colocar a URL do seu repositório
-# git clone https://github.com/seu-usuario/beaverdb.git
+# git clone https://github.com/hadagalberto/BeaverDB.git
 # Por enquanto, assumindo que você já copiou os arquivos
 
 if [ ! -d "beaverdb" ]; then

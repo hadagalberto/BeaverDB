@@ -7,6 +7,7 @@ public interface IDatabaseProviderFactory
     IDatabaseProvider CreateProvider(DatabaseServer server, string password);
 }
 
+
 public class DatabaseProviderFactory : IDatabaseProviderFactory
 {
     public IDatabaseProvider CreateProvider(DatabaseServer server, string password)
@@ -15,6 +16,7 @@ public class DatabaseProviderFactory : IDatabaseProviderFactory
         {
             ServerType.MySQL => new MySqlProvider(server.Host, server.Port, server.Username ?? "root", password),
             ServerType.PostgreSQL => new PostgreSqlProvider(server.Host, server.Port, server.Username ?? "postgres", password),
+            ServerType.SQLServer => new SqlServerProvider(server.Host, server.Port, server.Username ?? "sa", password),
             // Add other providers as needed
             _ => throw new NotSupportedException($"Database type {server.Type} is not yet supported")
         };
