@@ -79,13 +79,13 @@ fi
 # git clone https://github.com/hadagalberto/BeaverDB.git
 # Por enquanto, assumindo que você já copiou os arquivos
 
-if [ ! -d "beaverdb" ]; then
-    echo "❌ Diretório beaverdb não encontrado em /opt/"
-    echo "Por favor, copie os arquivos do BeaverDB para /opt/beaverdb"
-    exit 1
-fi
+# if [ ! -d "beaverdb" ]; then
+#     echo "❌ Diretório beaverdb não encontrado em /opt/"
+#     echo "Por favor, copie os arquivos do BeaverDB para /opt/beaverdb"
+#     exit 1
+# fi
 
-cd beaverdb
+# cd beaverdb
 
 # Criar arquivo .env
 echo ""
