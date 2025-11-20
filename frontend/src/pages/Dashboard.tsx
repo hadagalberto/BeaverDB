@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { serversApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import AddServerModal from '../components/AddServerModal';
 
 interface Server {
   id: number;
@@ -175,21 +176,12 @@ const Dashboard: React.FC = () => {
         )}
       </main>
 
-      {/* Add Server Modal - Placeholder */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full">
-            <h3 className="text-xl font-semibold text-white mb-4">Add Server</h3>
-            <p className="text-gray-400 mb-4">Server creation form will be implemented here</p>
-            <button
-              onClick={() => setShowAddModal(false)}
-              className="w-full px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Add Server Modal */}
+      <AddServerModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSuccess={loadServers}
+      />
     </div>
   );
 };

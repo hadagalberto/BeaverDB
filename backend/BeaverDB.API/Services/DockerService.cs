@@ -22,12 +22,21 @@ public class DockerService : IDockerService
     {
         _logger = logger;
         
-        // For Windows, use named pipe. For Linux, use unix socket
-        var dockerUri = Environment.OSVersion.Platform == PlatformID.Win32NT
-            ? "npipe://./pipe/docker_engine"
-            : "unix:///var/run/docker.sock";
-            
-        _dockerClient = new DockerClientConfiguration(new Uri(dockerUri)).CreateClient();
+        try
+        {
+            // For Windows, use named pipe. For Linux, use unix socket
+            var dockerUri = Environment.OSVersion.Platform == PlatformID.Win32NT
+                ? "npipe://./pipe/docker_engine"
+                : "unix:///var/run/docker.sock";
+                
+            _dockerClient = new DockerClientConfiguration(new Uri(dockerUri)).CreateClient();
+            _logger.LogInformation("Docker client initialized successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to initialize Docker client. Docker-managed servers will not be available.");
+            throw;
+        }
     }
 
     public async Task<string> CreateAndStartContainerAsync(DatabaseServer server, string password)
@@ -36,18 +45,32 @@ public class DockerService : IDockerService
 
         try
         {
+            _logger.LogInformation($"Pulling Docker image: {image}:latest");
+            
             // Pull image if not exists
             await _dockerClient.Images.CreateImageAsync(
-                new ImagesCreateParameters { FromImage = image, Tag = "latest" },
+                new ImagesCreateParameters 
+                { 
+                    FromImage = image,
+                    Tag = "latest" 
+                },
                 null,
-                new Progress<JSONMessage>());
+                new Progress<JSONMessage>(message =>
+                {
+                    if (!string.IsNullOrEmpty(message.Status))
+                    {
+                        _logger.LogDebug($"Docker pull: {message.Status}");
+                    }
+                }));
+
+            _logger.LogInformation($"Image {image}:latest pulled successfully");
 
             // Create container
             var containerName = $"beaverdb-{server.Type.ToString().ToLower()}-{server.Id}";
             
             var createResponse = await _dockerClient.Containers.CreateContainerAsync(new CreateContainerParameters
             {
-                Image = image,
+                Image = $"{image}:latest",
                 Name = containerName,
                 Env = envVars,
                 HostConfig = new HostConfig

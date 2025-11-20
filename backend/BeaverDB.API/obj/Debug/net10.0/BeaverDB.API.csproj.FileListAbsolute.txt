@@ -169,3 +169,4 @@ E:\source\source\repos\BeaverDB\backend\BeaverDB.API\obj\Debug\net10.0\refint\Be
 E:\source\source\repos\BeaverDB\backend\BeaverDB.API\obj\Debug\net10.0\BeaverDB.API.pdb
 E:\source\source\repos\BeaverDB\backend\BeaverDB.API\obj\Debug\net10.0\BeaverDB.API.genruntimeconfig.cache
 E:\source\source\repos\BeaverDB\backend\BeaverDB.API\obj\Debug\net10.0\ref\BeaverDB.API.dll
+E:\source\source\repos\BeaverDB\backend\BeaverDB.API\obj\Debug\net10.0\BeaverDB.API.sourcelink.json

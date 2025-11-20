@@ -23,6 +23,7 @@ services:
       context: ./backend/BeaverDB.API
       dockerfile: Dockerfile
     container_name: beaverdb-backend
+    user: root  # Required for Docker socket access
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=internal-db;Port=5432;Database=beaverdb;Username=postgres;Password=postgres

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("BeaverDB.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ecf09b0831ea5515a2c26eb2756cff975a575ac3")]
 [assembly: System.Reflection.AssemblyProductAttribute("BeaverDB.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BeaverDB.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
