@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/backend/">
+    <Project Path="backend/BeaverDB.API/BeaverDB.API.csproj" />
+  </Folder>
+</Solution>

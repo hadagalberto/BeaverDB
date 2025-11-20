@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  # Internal PostgreSQL database for BeaverDB
+  internal-db:
+    image: postgres:16
+    container_name: beaverdb-internal-db
+    environment:
+      POSTGRES_DB: beaverdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - beaverdb-internal-data:/var/lib/postgresql/data
+    networks:
+      - beaverdb-network
+    restart: unless-stopped
+
+  # BeaverDB Backend API
+  backend:
+    build:
+      context: ./backend/BeaverDB.API
+      dockerfile: Dockerfile
+    container_name: beaverdb-backend
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=internal-db;Port=5432;Database=beaverdb;Username=postgres;Password=postgres
+      - ASPNETCORE_URLS=http://+:8080
+    ports:
+      - "5000:8080"
+    depends_on:
+      - internal-db
+    networks:
+      - beaverdb-network
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock  # For Docker management
+    restart: unless-stopped
+
+  # BeaverDB Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: beaverdb-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - beaverdb-network
+    restart: unless-stopped
+
+volumes:
+  beaverdb-internal-data:
+
+networks:
+  beaverdb-network:
+    driver: bridge
