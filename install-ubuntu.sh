@@ -136,23 +136,85 @@ echo ""
 echo "📊 Status dos containers:"
 docker ps --filter "name=beaverdb" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 
-# Configurar Nginx (opcional)
+# Configurar Nginx e SSL
 echo ""
-read -p "Deseja instalar e configurar Nginx como reverse proxy? (s/N): " INSTALL_NGINX
+read -p "Deseja configurar Nginx e SSL (HTTPS)? (s/N): " INSTALL_NGINX
 
 if [ "$INSTALL_NGINX" = "s" ] || [ "$INSTALL_NGINX" = "S" ]; then
-    echo "📦 Instalando Nginx..."
-    apt install -y nginx
+    echo "� Configurando Nginx e SSL..."
     
     read -p "Digite seu domínio (ex: beaverdb.example.com): " DOMAIN
+    read -p "Digite seu email para o Let's Encrypt: " EMAIL
     
-    cat > /etc/nginx/sites-available/beaverdb <<EOF
+    if [ -z "$DOMAIN" ] || [ -z "$EMAIL" ]; then
+        echo "❌ Domínio e email são obrigatórios para configuração SSL."
+        exit 1
+    fi
+
+    # 1. Criar configuração inicial do Nginx (apenas HTTP para validação do Certbot)
+    echo "📝 Gerando configuração do Nginx..."
+    cat > nginx/conf.d/app.conf <<EOF
 server {
     listen 80;
-    server_name $DOMAIN;
+    listen [::]:80;
+    server_name $DOMAIN www.$DOMAIN;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
 
     location / {
-        proxy_pass http://localhost:3000;
+        return 301 https://\$host\$request_uri;
+    }
+}
+EOF
+
+    # 2. Iniciar Nginx
+    echo "🚀 Iniciando Nginx..."
+    docker compose up -d nginx
+
+    # 3. Obter certificado SSL
+    echo "🔒 Obtendo certificado SSL..."
+    docker compose run --rm certbot certonly --webroot --webroot-path /var/www/certbot -d $DOMAIN -d www.$DOMAIN --email $EMAIL --agree-tos --no-eff-email
+
+    # 4. Atualizar configuração do Nginx para HTTPS
+    echo "📝 Atualizando configuração do Nginx para HTTPS..."
+    cat > nginx/conf.d/app.conf <<EOF
+server {
+    listen 80;
+    listen [::]:80;
+    server_name $DOMAIN www.$DOMAIN;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://\$host\$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    server_name $DOMAIN www.$DOMAIN;
+
+    ssl_certificate /etc/letsencrypt/live/$DOMAIN/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/$DOMAIN/privkey.pem;
+    
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    location / {
+        proxy_pass http://frontend:80;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+
+    location /api/ {
+        proxy_pass http://backend:8080/;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -160,20 +222,22 @@ server {
     }
 }
 EOF
-    
-    ln -sf /etc/nginx/sites-available/beaverdb /etc/nginx/sites-enabled/
-    nginx -t && systemctl restart nginx
-    
-    echo "✓ Nginx configurado para $DOMAIN"
-    
-    # Certificado SSL
-    read -p "Deseja instalar certificado SSL com Let's Encrypt? (s/N): " INSTALL_SSL
-    
-    if [ "$INSTALL_SSL" = "s" ] || [ "$INSTALL_SSL" = "S" ]; then
-        apt install -y certbot python3-certbot-nginx
-        certbot --nginx -d $DOMAIN --non-interactive --agree-tos --email admin@$DOMAIN
-        echo "✓ Certificado SSL instalado"
+
+    # 5. Baixar parâmetros SSL recomendados se não existirem
+    if [ ! -f "certbot/conf/options-ssl-nginx.conf" ]; then
+        echo "📥 Baixando parâmetros SSL recomendados..."
+        curl -sSLo certbot/conf/options-ssl-nginx.conf https://raw.githubusercontent.com/certbot/certbot/master/certbot-nginx/certbot_nginx/_internal/tls_configs/options-ssl-nginx.conf
     fi
+    if [ ! -f "certbot/conf/ssl-dhparams.pem" ]; then
+        echo "keygen..."
+        openssl dhparam -out certbot/conf/ssl-dhparams.pem 2048
+    fi
+
+    # 6. Recarregar Nginx
+    echo "🔄 Recarregando Nginx..."
+    docker compose restart nginx
+    
+    echo "✓ Nginx e SSL configurados com sucesso!"
 fi
 
 # Configurar Firewall

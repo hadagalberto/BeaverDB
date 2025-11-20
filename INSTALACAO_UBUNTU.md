@@ -130,27 +130,6 @@ services:
     container_name: beaverdb-internal-db
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - "127.0.0.1:5432:5432"  # Apenas localhost
-    volumes:
-      - beaverdb-internal-data:/var/lib/postgresql/data
-    networks:
-      - beaverdb-network
-    restart: unless-stopped
-
-  backend:
-    build:
-      context: ./backend/BeaverDB.API
-      dockerfile: Dockerfile
-    container_name: beaverdb-backend
-    user: root  # Necessário para acesso ao socket Docker
-    environment:
-      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
-      - ConnectionStrings__DefaultConnection=${ConnectionStrings__DefaultConnection}
-      - ASPNETCORE_URLS=http://+:8080
-      - Jwt__Key=${Jwt__Key}
       - Jwt__Issuer=${Jwt__Issuer}
       - Jwt__Audience=${Jwt__Audience}
       - Encryption__Key=${Encryption__Key}
